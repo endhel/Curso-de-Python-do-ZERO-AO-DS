@@ -1,3 +1,4 @@
+import geopandas
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -14,9 +15,20 @@ def get_data(path):
     return data
 
 
+@st.cache(allow_output_mutation=True)
+def get_geofile(url):
+    geofile = geopandas.read_file(url)
+
+    return geofile
+
+
 # get data
 path = 'datasets/kc_house_data.csv'
 data = get_data(path)
+
+# get geofile
+url = 'https://opendata.arcgis.com/datasets/83fc2e72903343aabff6de8cb445b81c_2.geojson'
+geofile = get_geofile(url)
 
 # add new feature
 data['price_m2'] = data['price'] / data['sqft_lot']
@@ -99,3 +111,30 @@ for name, row in df.iterrows():
 
 with c1:
     folium_static(density_map)
+
+# Region Price Map
+c2.header('Price Density')
+
+df = data[['price', 'zipcode']].groupby('zipcode').mean().reset_index()
+df.columns = ['ZIP', 'PRICE']
+
+df = df.sample(10)
+
+geofile = geofile[geofile['ZIP'].isin(df['ZIP'].tolist())]
+
+region_price_map = folium.Map(
+    location=[data.lat.mean(), data.long.mean()], default_zoom_start=15)
+
+region_price_map.choropleth(
+    data=df,
+    geodata=geofile,
+    columns=['ZIP', 'PRICE'],
+    key_on='feature.properties.ZIP',
+    fill_color='YlOrRd',
+    fill_opacity=0.7,
+    line_opacity=0.2,
+    legend_name='AVG PRICE'
+)
+
+with c2:
+    folium_static(region_price_map)
