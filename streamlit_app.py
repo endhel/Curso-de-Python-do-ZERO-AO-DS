@@ -150,14 +150,33 @@ with c2:
 st.sidebar.title('Commercial Options')
 st.title('Commercial Attributes')
 
-# Average price per year
-df = data[['yr_built', 'price']].groupby('yr_built').mean().reset_index()
+data['date'] = pd.to_datetime(data.date)
 
+# filters
+min_year_built = int(data['yr_built'].min())
+max_year_built = int(data['yr_built'].max())
+
+st.sidebar.subheader('Select Max Year Built')
+f_year_built = st.sidebar.slider(
+    'Year Built',
+    min_year_built,
+    max_year_built,
+    min_year_built
+)
+
+# Average price per year
+
+st.header('Average Price per Year Built')
+
+# data selection
+df = data.loc[data['yr_built'] < f_year_built]
+df = df[['yr_built', 'price']].groupby('yr_built').mean().reset_index()
+
+# plot graph
 fig = px.line(df, x='yr_built', y='price')
 st.plotly_chart(fig, use_container_width=True)
 
 # Average price per day
-data['date'] = pd.to_datetime(data.date)
 df = data[['date', 'price']].groupby('date').mean().reset_index()
 
 fig = px.line(df, x='date', y='price')
