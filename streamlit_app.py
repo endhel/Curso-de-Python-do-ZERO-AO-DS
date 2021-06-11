@@ -5,6 +5,7 @@ import numpy as np
 import folium
 from streamlit_folium import folium_static
 from folium.plugins import MarkerCluster
+import plotly.express as px
 
 st.set_page_config(layout='wide')
 
@@ -90,6 +91,8 @@ c2.dataframe(df1, height=600)
 # Portifolio Density
 # ----------------------
 
+st.title('Region Overview')
+
 c1, c2 = st.beta_columns((1, 1))
 
 c1.header('Portifolio Density')
@@ -127,7 +130,7 @@ region_price_map = folium.Map(
 
 region_price_map.choropleth(
     data=df,
-    geodata=geofile,
+    geo_data=geofile,
     columns=['ZIP', 'PRICE'],
     key_on='feature.properties.ZIP',
     fill_color='YlOrRd',
@@ -138,3 +141,24 @@ region_price_map.choropleth(
 
 with c2:
     folium_static(region_price_map)
+
+
+# ---------------------------------------------
+# property distribution by commercial category
+# ---------------------------------------------
+
+st.sidebar.title('Commercial Options')
+st.title('Commercial Attributes')
+
+# Average price per year
+df = data[['yr_built', 'price']].groupby('yr_built').mean().reset_index()
+
+fig = px.line(df, x='yr_built', y='price')
+st.plotly_chart(fig, use_container_width=True)
+
+# Average price per day
+data['date'] = pd.to_datetime(data.date)
+df = data[['date', 'price']].groupby('date').mean().reset_index()
+
+fig = px.line(df, x='date', y='price')
+st.plotly_chart(fig, use_container_width=True)
