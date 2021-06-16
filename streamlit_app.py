@@ -1,3 +1,4 @@
+from altair.vegalite.v4.schema.channels import X
 import geopandas
 from pytz import utc
 import streamlit as st
@@ -215,3 +216,40 @@ df = data.loc[data.price < f_price]
 # data plot
 fig = px.histogram(df, x='price', nbins=50)
 st.plotly_chart(fig, use_container_width=True)
+
+# ---------------------------------------------
+# distribution of properties by physical categories
+# ---------------------------------------------
+st.sidebar.title('Attributes Options')
+st.title('House Attributes')
+
+# filters
+f_bedrooms = st.sidebar.selectbox(
+    'Max Number of Bedrooms',
+    data.bedrooms.sort_values().unique()
+)
+
+f_bathrooms = st.sidebar.selectbox(
+    'Max Number of Bathrooms',
+    data.bathrooms.sort_values().unique()
+)
+
+c1, c2 = st.beta_columns(2)
+
+# House per bedrooms
+c1.header('Houses per Bedrooms')
+df = data[data.bedrooms < f_bedrooms]
+fig = px.histogram(df, x='bedrooms', nbins=19)
+c1.plotly_chart(fig, use_container_width=True)
+
+# House per bathrooms
+c2.header('Houses per Bathrooms')
+df = data[data.bathrooms < f_bathrooms]
+fig = px.histogram(df, x='bathrooms', nbins=19)
+c2.plotly_chart(fig, use_container_width=True)
+
+# House per floors
+fig = px.histogram(data, x='floors', nbins=19)
+st.plotly_chart(fig, use_container_width=True)
+
+# House per waterview
