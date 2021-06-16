@@ -1,4 +1,5 @@
 import geopandas
+from pytz import utc
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,6 +7,7 @@ import folium
 from streamlit_folium import folium_static
 from folium.plugins import MarkerCluster
 import plotly.express as px
+from datetime import datetime
 
 st.set_page_config(layout='wide')
 
@@ -150,7 +152,7 @@ with c2:
 st.sidebar.title('Commercial Options')
 st.title('Commercial Attributes')
 
-data['date'] = pd.to_datetime(data.date)
+# Average price per year
 
 # filters
 min_year_built = int(data['yr_built'].min())
@@ -164,8 +166,6 @@ f_year_built = st.sidebar.slider(
     min_year_built
 )
 
-# Average price per year
-
 st.header('Average Price per Year Built')
 
 # data selection
@@ -176,8 +176,23 @@ df = df[['yr_built', 'price']].groupby('yr_built').mean().reset_index()
 fig = px.line(df, x='yr_built', y='price')
 st.plotly_chart(fig, use_container_width=True)
 
+
 # Average price per day
-df = data[['date', 'price']].groupby('date').mean().reset_index()
+
+st.header('Average Price per Day')
+st.sidebar.subheader('Select Max Date')
+
+# filters
+data.date = pd.to_datetime(data.date).dt.date
+min_date = datetime.strptime(str(data['date'].min()), '%Y-%m-%d')
+max_date = datetime.strptime(str(data['date'].max()), '%Y-%m-%d')
+
+f_date = st.sidebar.slider('Date', min_date, max_date, min_date)
+
+# data filtering
+data.date = pd.to_datetime(data.date)
+df = data.loc[data.date < f_date]
+df = df[['date', 'price']].groupby('date').mean().reset_index()
 
 fig = px.line(df, x='date', y='price')
 st.plotly_chart(fig, use_container_width=True)
