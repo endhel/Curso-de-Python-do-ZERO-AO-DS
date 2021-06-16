@@ -196,3 +196,22 @@ df = df[['date', 'price']].groupby('date').mean().reset_index()
 
 fig = px.line(df, x='date', y='price')
 st.plotly_chart(fig, use_container_width=True)
+
+# ---------------------------------------------
+# Histogram
+# ---------------------------------------------
+st.header('Price Distribution')
+st.sidebar.subheader('Select Max Price')
+
+# filters
+min_price = int(data.price.min())
+max_price = int(data.price.max())
+avg_price = int(data.price.mean())
+
+# data filtering
+f_price = st.sidebar.slider('Price', min_price, max_price, avg_price)
+df = data.loc[data.price < f_price]
+
+# data plot
+fig = px.histogram(df, x='price', nbins=50)
+st.plotly_chart(fig, use_container_width=True)
